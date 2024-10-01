@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Task List</h1>
+
+<form method="GET" class="form-inline mb-3">
+    <!-- Status filter -->
+    <div class="form-group mx-sm-3">
+        <label for="status" class="sr-only">Status</label>
+        <select name="status" id="status" class="form-control">
+            <option value="">All Status</option>
+            <option value="Pending" {% if request.GET.status == 'Pending' %}selected{% endif %}>Pending</option>
+            <option value="Completed" {% if request.GET.status == 'Completed' %}selected{% endif %}>Completed</option>
+        </select>
+    </div>
+
+    <!-- Priority filter -->
+    <div class="form-group mx-sm-3">
+        <label for="priority" class="sr-only">Priority</label>
+        <select name="priority_level" id="priority_level" class="form-control">
+            <option value="">All Priority</option>
+            <option value="High" {% if request.GET.priority_level == 'High' %}selected{% endif %}>High</option>
+            <option value="Medium" {% if request.GET.priority_level == 'Medium' %}selected{% endif %}>Medium</option>
+            <option value="Low" {% if request.GET.priority_level == 'Low' %}selected{% endif %}>Low</option>
+        </select>
+    </div>
+
+    <!-- Due Date filter -->
+    <div class="form-group mx-sm-3">
+        <label for="due_date" class="sr-only">Due Date</label>
+        <input type="date" name="due_date" id="due_date" class="form-control" value="{{ request.GET.due_date }}">
+    </div>
+
+    <!-- Sort by option -->
+    <div class="form-group mx-sm-3">
+        <label for="ordering" class="sr-only">Sort by</label>
+        <select name="ordering" class="form-control" onchange="this.form.submit()">
+            <option value="due_date" {% if request.GET.ordering == 'due_date' %}selected{% endif %}>Due Date</option>
+            <option value="priority_level" {% if request.GET.ordering == 'priority_level' %}selected{% endif %}>Priority</option>
+            <option value="pending_first" {% if request.GET.ordering == 'pending_first' %}selected{% endif %}>Pending Tasks First</option>
+            <option value="priority_high_to_low" {% if request.GET.ordering == 'priority_high_to_low' %}selected{% endif %}>Priority (High to Low)</option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Apply Filters</button>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Due Date</th>
+            <th>Status</th>
+            <th>Priority</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for task in task_list %}
+            <tr>
+                <td>{{ task.title }}</td>
+                <td>{{ task.description }}</td>
+                <td>{{ task.due_date }}</td>
+                <td>
+                    {% if task.is_complete %}
+                        <span class="badge badge-success">Completed</span> 
+                        <br>
+                        <small>Completed on: {{ task.completed_at }}</small>
+                    {% else %}
+                        <span class="badge badge-warning">Pending</span>
+                    {% endif %}
+                </td>
+                <td>{{ task.priority_level }}</td>
+                <td>
+                    <!-- Edit and Mark Complete/Incomplete buttons -->
+                    {% if not task.is_complete %}
+                        <a href="{% url 'task_update' task.pk %}" class="btn btn-primary btn-sm">Edit</a>
+                        <form method="post" action="{% url 'task_mark_complete' task.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success btn-sm">Mark Complete</button>
+                        </form>
+                    {% else %}
+                        <form method="post" action="{% url 'task_mark_incomplete' task.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-warning btn-sm">Mark Incomplete</button>
+                        </form>
+                    {% endif %}
+                    <a href="{% url 'task_delete' task.pk %}" class="btn btn-danger btn-sm">Delete</a>
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="6">No tasks found.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+    
